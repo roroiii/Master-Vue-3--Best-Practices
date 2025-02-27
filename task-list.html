@@ -53,11 +53,16 @@
   <script src="https://unpkg.com/vue@3.4.0"></script>
 </head>
 
+<!-- 
+練習進度: 30. Displaying Task List
+https://www.udemy.com/course/vue-in-action/learn/lecture/43375902#questions
+-->
+
 <body>
   <div id="app">
-    <form>
+    <form @submit.prevent="addTask">
       <!-- Adding tasks form -->
-      <input placeholder="Add new task">
+      <input placeholder="Add new task" ref="taskDescription" v-model="newInputValue">
       <select>
         <option disabled value="">Select priority</option>
         <option>High</option>
@@ -92,12 +97,43 @@
   </div>
 
   <script>
-    const { createApp } = Vue;
+    const { createApp, ref, onMounted } = Vue;
 
     const App = {
       setup() {
-        return {
+        const taskList = ref([
+          {
+            id: 1,
+            description: "Buy groceries",
+            priority: "Low",
+            done: false
+          }
+        ]);
+        const newInputValue = ref('');
+        const taskDescription = ref(null);
+        onMounted(() => {
+          taskDescription.value.focus();
 
+          console.log('before mount');
+        });
+
+        const addTask = () => {
+          const newTask = {
+            id: taskList.value.length + 1,
+            description: newInputValue.value,
+            priority: 'Low',
+            done: false,
+          }
+          taskList.value.push(newTask);
+          newInputValue.value = '';
+          taskDescription.value.focus();
+        }
+
+        return {
+          newInputValue,
+          taskList,
+          taskDescription,
+          addTask,
         }
       },
     };
