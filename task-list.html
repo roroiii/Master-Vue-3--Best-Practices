@@ -54,8 +54,8 @@
 </head>
 
 <!-- 
-練習進度: 30. Displaying Task List
-https://www.udemy.com/course/vue-in-action/learn/lecture/43375902#questions
+練習進度: 36. Exercise 3 - Solution (finished)
+https://www.udemy.com/course/vue-in-action/learn/lecture/43417530#overview
 -->
 
 <body>
@@ -63,7 +63,7 @@ https://www.udemy.com/course/vue-in-action/learn/lecture/43375902#questions
     <form @submit.prevent="addTask">
       <!-- Adding tasks form -->
       <input placeholder="Add new task" ref="taskDescription" v-model="newInputValue">
-      <select>
+      <select v-model="newTaskPriority">
         <option disabled value="">Select priority</option>
         <option>High</option>
         <option>Medium</option>
@@ -73,7 +73,7 @@ https://www.udemy.com/course/vue-in-action/learn/lecture/43375902#questions
     </form>
 
     <!-- Task filtering -->
-    <input placeholder="Filter tasks...">
+    <input placeholder="Filter tasks..." v-model="filterValue">
 
     <!-- If there no tasks -->
     <div>
@@ -83,57 +83,72 @@ https://www.udemy.com/course/vue-in-action/learn/lecture/43375902#questions
     <div>
       <h3>Your Tasks</h3>
       <!-- This is a list of tasks -->
-      <div>
+      <div v-for="task in filteredTaskList" :key="task.id"
+        :class="{'task': true, completed: task.done, [task.priority.toLowerCase()]: true}">
         <div>
           <!-- Is task done? -->
-          <input type="checkbox">
+          <input type="checkbox" value="task.done">
           <!-- Task description -->
-          <span></span>
+          <span>{{ task.description }}</span>
         </div>
         <!-- Removing a task -->
-        <button class="remove-button">✖</button>
+        <button class="remove-button" @click="removeTask(task.id)">✖</button>
       </div>
     </div>
   </div>
 
   <script>
-    const { createApp, ref, onMounted } = Vue;
+    const { createApp, ref, onMounted, watchEffect, computed } = Vue;
 
     const App = {
       setup() {
-        const taskList = ref([
-          {
-            id: 1,
-            description: "Buy groceries",
-            priority: "Low",
-            done: false
-          }
-        ]);
+        const taskList = ref(JSON.parse(localStorage.getItem('taskList') ?? '[]'));
+
+        const filteredTaskList = computed(() => {
+          return taskList.value.filter((task) => task.description.includes(filterValue.value));
+        });
+
         const newInputValue = ref('');
         const taskDescription = ref(null);
+        const newTaskPriority = ref('');
+        const filterValue = ref('');
+
         onMounted(() => {
           taskDescription.value.focus();
-
-          console.log('before mount');
         });
 
         const addTask = () => {
+          if (!newInputValue.value || !newTaskPriority.value) return;
+
           const newTask = {
             id: taskList.value.length + 1,
             description: newInputValue.value,
-            priority: 'Low',
+            priority: newTaskPriority.value,
             done: false,
           }
-          taskList.value.push(newTask);
+
+          taskList.value.unshift(newTask);
           newInputValue.value = '';
+          newTaskPriority.value = '';
           taskDescription.value.focus();
         }
 
+        const removeTask = (id) => {
+          taskList.value = taskList.value.filter((t) => t.id !== id)
+        };
+
+        watchEffect(() => {
+          localStorage.setItem('taskList', JSON.stringify(taskList.value));
+        });
+
         return {
-          newInputValue,
-          taskList,
           taskDescription,
+          newInputValue,
+          newTaskPriority,
           addTask,
+          removeTask,
+          filteredTaskList,
+          filterValue,
         }
       },
     };
